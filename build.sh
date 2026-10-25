@@ -1,8 +1,2 @@
-package com.maxim.bodymarket.client;
-
-/** Текущая болезнь игрока (приходит с сервера). */
-public final class ClientState {
-    public static String disease = "";
-
-    private ClientState() {}
-}
+#!/bin/sh
+gradle build && echo "Готово: build/libs/bodymarket-1.0.0.jar"

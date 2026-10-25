@@ -1,55 +1,20 @@
-package com.maxim.bodymarket.client;
+BODY MARKET (Fabric 1.20.1) — мод про торговца Максима
 
-import com.maxim.bodymarket.BodyMarket;
-import com.maxim.bodymarket.Market;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+КАК ПОЛУЧИТЬ .JAR (самый простой способ, без установки Java):
+1. Зарегистрируйся на github.com (бесплатно) и создай новый репозиторий.
+2. Загрузи туда ВСЁ содержимое этой папки (включая папку .github).
+3. Открой вкладку Actions -> выбери "build" -> дождись зелёной галочки (2-5 минут).
+4. Открой этот запуск и скачай внизу "bodymarket-jar" -> внутри bodymarket-1.0.0.jar.
 
-import java.util.ArrayList;
-import java.util.List;
+ИЛИ ЛОКАЛЬНО: установи JDK 17 и Gradle 8.5, потом запусти build.bat (Windows)
+или build.sh (Linux/Mac). Файл появится в build/libs/.
 
-public class BodyMarketClient implements ClientModInitializer {
-    @Override
-    public void onInitializeClient() {
-        EntityRendererRegistry.register(BodyMarket.MAXIM, MaximRenderer::new);
+УСТАНОВКА: нужен Fabric Loader + Fabric API для Minecraft 1.20.1.
+Положи bodymarket-1.0.0.jar в папку mods.
 
-        // сервер открывает меню Максима
-        ClientPlayNetworking.registerGlobalReceiver(Market.OPEN_MENU, (client, handler, buf, sender) -> {
-            String greeting = buf.readString();
-            int emeralds = buf.readVarInt();
-            List<MaximScreen.Entry> offers = new ArrayList<>();
-            int n = buf.readVarInt();
-            for (int i = 0; i < n; i++) offers.add(new MaximScreen.Entry(buf.readString(), buf.readVarInt()));
-            List<MaximScreen.Entry> sold = new ArrayList<>();
-            int m = buf.readVarInt();
-            for (int i = 0; i < m; i++) sold.add(new MaximScreen.Entry(buf.readString(), buf.readVarInt()));
-
-            client.execute(() -> {
-                boolean tab = false;
-                int page = 0;
-                if (client.currentScreen instanceof MaximScreen old) {
-                    tab = old.buyTab;
-                    page = old.page;
-                }
-                MaximScreen screen = new MaximScreen(greeting, emeralds, offers, sold);
-                screen.buyTab = tab;
-                screen.page = page;
-                client.setScreen(screen);
-            });
-        });
-
-        // сервер сообщает текущую болезнь
-        ClientPlayNetworking.registerGlobalReceiver(Market.DISEASE, (client, handler, buf, sender) -> {
-            String id = buf.readString();
-            client.execute(() -> ClientState.disease = id);
-        });
-
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ClientState.disease = "");
-        HudRenderCallback.EVENT.register((ctx, tickDelta) -> DiseaseFx.render(ctx));
-        ClientTickEvents.END_CLIENT_TICK.register(DiseaseFx::tick);
-    }
-}
+ИГРА:
+- При первом входе в мир получаешь яйцо Максима. Поставь его на землю.
+- ПКМ по Максиму -> меню. Каждый раз у него случайные предложения и цены.
+- Кнопка "Случайная часть" — рандом сам выберет, что продать.
+- "Новые предложения" — перемешать список. "Выкупить" — вернуть часть (цена x3).
+- /maxim reset (для операторов) — вернуть всё обратно.
